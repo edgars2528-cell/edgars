@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAAC Mae Taeng Full Staff Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --baac-green: #2d6a4f;
+            --baac-gold: #b7903c;
+            --silver: #a8a8a8;
+            --bronze: #cd7f32;
+            --white: #ffffff;
+        }
+
+        body { font-family: 'Sarabun', sans-serif; background-color: #f4f7f4; margin: 0; padding: 10px; }
+        .container { max-width: 1000px; margin: 0 auto; background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-top: 10px solid var(--baac-green); }
+        .header { text-align: center; margin-bottom: 25px; }
+        .logo { width: 130px; height: auto; }
+        
+        /* Top 3 Hall of Fame */
+        .top3-section { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 40px; padding: 20px 0; flex-wrap: wrap; }
+        .top-card { background: #fff; border-radius: 15px; padding: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; min-width: 180px; }
+        .rank-1 { order: 2; border: 3px solid var(--baac-gold); padding: 25px 15px; }
+        .rank-2 { order: 1; border: 3px solid var(--silver); }
+        .rank-3 { order: 3; border: 3px solid var(--bronze); }
+        .medal { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; border-radius: 50%; color: white; line-height: 40px; font-weight: bold; }
+        .bg-1 { background: var(--baac-gold); }
+        .bg-2 { background: var(--silver); }
+        .bg-3 { background: var(--bronze); }
+        .top-photo { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid #eee; }
+        .rank-1 .top-photo { width: 130px; height: 130px; }
+        .top-percent { font-size: 22px; font-weight: bold; color: var(--baac-green); }
+
+        /* กราฟและ Dropdown */
+        .chart-wrapper { height: 750px; margin-bottom: 30px; background: #fff; padding: 10px; border-radius: 12px; border: 1px solid #eee; }
+        .selector-box { background: #d8f3dc; padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; }
+        select { width: 100%; max-width: 500px; padding: 12px; font-size: 16px; border: 2px solid var(--baac-green); border-radius: 10px; outline: none; }
+
+        .profile-display { display: none; flex-wrap: wrap; gap: 25px; padding: 25px; border: 2px solid var(--baac-green); border-radius: 15px; background: #fff; }
+        .staff-main-photo { width: 180px; height: 180px; border-radius: 15px; object-fit: cover; border: 4px solid var(--baac-green); }
+        
+        .data-card { background: #f9f9f9; padding: 12px; border-radius: 10px; border-left: 5px solid var(--baac-green); margin-bottom: 10px; }
+        .val-big { font-size: 24px; font-weight: bold; color: var(--baac-green); }
+
+        @media (max-width: 600px) { .top3-section { flex-direction: column; align-items: center; } .top-card { width: 85%; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <img src="logo ธ.ก.ส.jpg" alt="Logo" class="logo">
+        <h1 style="color: var(--baac-green); margin: 10px 0;">ระบบรายงานผลการปฏิบัติงานรายบุคคล</h1>
+        <p style="color: var(--baac-gold); font-weight: bold;">ธ.ก.ส. สาขาแม่แตง ประจำวันที่ 22 มิถุนายน 2569</p>
+    </div>
+
+    <!-- ส่วนพนักงาน Top 3 -->
+    <div class="top3-section">
+        <div class="top-card rank-2">
+            <div class="medal bg-2">2</div>
+            <img src="logo ธ.ก.ส.jpg" class="top-photo" alt="Photo">
+            <div style="font-weight:bold;">นางไพรินทร์ แก้วประสิทธ์ิ</div>
+            <div class="top-percent">100.00%</div>
+        </div>
+        <div class="top-card rank-1">
+            <div class="medal bg-1">1</div>
+            <img src="น.ส.ณัฐวรรณ ทิพยมณฑล.jpg" class="top-photo" alt="Photo">
+            <div style="font-weight:bold;">นส.ณัฐวรรณ ทิพยมณฑล</div>
+            <div class="top-percent">120.45%</div>
+        </div>
+        <div class="top-card rank-3">
+            <div class="medal bg-3">3</div>
+            <img src="นางสาววิภาภรณ์ ชัยวรรณ์.jpg" class="top-photo" alt="Photo">
+            <div style="font-weight:bold;">นส.วิภาภรณ์ ชัยวรรณ์</div>
+            <div class="top-percent">52.44%</div>
+        </div>
+    </div>
+
+    <div class="chart-wrapper">
+        <canvas id="allStaffChart"></canvas>
+    </div>
+
+    <div class="selector-box">
+        <h3>เลือกรายชื่อพนักงานเพื่อดูผลงาน (ครบ 22 ท่าน)</h3>
+        <select id="staffPicker" onchange="updateProfile()">
+            <option value="">-- กรุณาเลือกชื่อพนักงาน --</option>
+        </select>
+    </div>
+
+    <div id="profileContainer" class="profile-display">
+        <div style="text-align:center; flex:1; min-width: 200px;">
+            <img id="pPhoto" src="" class="staff-main-photo" onerror="this.src='logo ธ.ก.ส.jpg'">
+            <h3 id="pName" style="margin:15px 0; color: var(--baac-green);"></h3>
+        </div>
+        <div style="flex:2; min-width: 280px;">
+            <div class="data-card"><strong>ตำแหน่ง:</strong> <span id="pPos"></span></div>
+            <div class="data-card"><strong>เปอร์เซ็นต์ผลงาน:</strong> <br><span id="pPercent" class="val-big"></span></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="data-card"><strong>เป้าหมาย (บาท):</strong><br><span id="pTarget"></span></div>
+                <div class="data-card"><strong>ผลงานสะสม (บาท):</strong><br><span id="pResult"></span></div>
+            </div>
+            <div class="data-card" style="border-left-color: var(--baac-gold);"><strong>ห่างจากเป้าหมาย (บาท):</strong><br><span id="pGap"></span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ข้อมูลครบ 22 ท่าน จาก สงช.pdf [1], [2]
+    const staffList = [
+        { n: "นางสาวณัฐวรรณ ทิพยมณฑล", p: "พนักงานการเงิน 7", t: 500000, r: 602227, pc: 120.45, g: "-102,227", rk: 1, img: "น.ส.ณัฐวรรณ ทิพยมณฑล.jpg" },
+        { n: "นางไพรินทร์ แก้วประสิทธ์ิ", p: "หัวหน้าการเงิน 8", t: 200000, r: 200000, pc: 100.00, g: "0", rk: 2, img: "logo ธ.ก.ส.jpg" },
+        { n: "นางสาววิภาภรณ์ ชัยวรรณ์", p: "พนักงานการเงิน 7", t: 500000, r: 262199, pc: 52.44, g: "237,801", rk: 3, img: "นางสาววิภาภรณ์ ชัยวรรณ์.jpg" },
+        { n: "นางสาวชนิการ์ โกศลวัฒนกุล", p: "พนักงานการเงิน 7", t: 500000, r: 222060, pc: 44.41, g: "277,940", rk: 4, img: "น.ส.ชนิการ์ โกศลวัฒนกุล.jpg" },
+        { n: "นางสาวนภาลัย แสงดาวนิล", p: "พนักงานการเงิน 7", t: 500000, r: 7725, pc: 1.55, g: "492,275", rk: 5, img: "นางสาวนภาลัย แสงดาวนิล.jpeg" },
+        { n: "นางสาวอารีย์วัล แสนสนิท", p: "พนักงานพัฒนาธุรกิจ 7", t: 300000, r: 3170, pc: 1.06, g: "296,830", rk: 6, img: "น.ส.อารีย์วัล แสนสนิท.jpeg" },
+        { n: "นางสาววรวรรณ เลาเงิน", p: "พนักงานพัฒนาธุรกิจ 6", t: 300000, r: 3060, pc: 1.02, g: "296,940", rk: 7, img: "นางสาววรวรรณ เลาเงิน.jpeg" },
+        { n: "นางสาวสุจิตรา คํากัมพล", p: "พนักงานพัฒนาธุรกิจ 7", t: 300000, r: 2045, pc: 0.68, g: "297,955", rk: 8, img: "" },
+        { n: "นายรณกฤต มหินธนาธิกุล", p: "พนักงานพัฒนาธุรกิจ 7", t: 300000, r: 1880, pc: 0.63, g: "298,120", rk: 9, img: "นายรณกฤต มหินธนาธิกุล.jpg" },
+        { n: "นางสาวพรรณนิภา ใจก้อน", p: "พนักงานการเงิน 7", t: 500000, r: 3021, pc: 0.60, g: "496,979", rk: 10, img: "น.ส.พรรณนิภา ใจก้อน.jpeg" },
+        { n: "นายเฉลิมพล แสนพรมมา", p: "พนักงานพัฒนาธุรกิจ 7", t: 300000, r: 1030, pc: 0.34, g: "298,970", rk: 11, img: "นายเฉลิมพล แสนพรมมา.jpg" },
+        { n: "นายนิรันดร์ กันธวงค์", p: "ผู้จัดการสาขา 10", t: 200000, r: 0, pc: 0.00, g: "200,000", rk: 12, img: "" },
+        { n: "นางดวงใจ วังทะพันธ์", p: "ผู้ช่วยผู้จัดการสาขา 9", t: 200000, r: 0, pc: 0.00, g: "200,000", rk: 12, img: "" },
+        { n: "นายธีระวิทย์ พรายแย้ม", p: "หัวหน้าหน่วยอำเภอ 8", t: 200000, r: 0, pc: 0.00, g: "200,000", rk: 12, img: "นายธีระวิทย์ พรายแย้ม.jpeg" },
+        { n: "นายอดุลย์ มีจีรกุล", p: "พนักงานพัฒนาธุรกิจ 7", t: 300000, r: 0, pc: 0.00, g: "300,000", rk: 12, img: "นายอดุลย์ มีจีรกุล.jpeg" },
+        { n: "นายวีราทร วงศ์ศรี", p: "ผู้ช่วยผู้จัดการสาขา 9", t: 200000, r: 0, pc: 0.00, g: "200,000", rk: 12, img: "" },
+        { n: "นางสาวจิรวดี อภิวงศ์", p: "หัวหน้าหน่วยอำเภอ 8", t: 200000, r: 0, pc: 0.00, g: "200,000", rk: 12, img: "น.ส.จิรวดี อภิวงศ์.png" },
+        { n: "นางสาวกาลดากร คามรัตนภูมิ", p: "พนักงานพัฒนาธุรกิจ 7", t: 300000, r: 0, pc: 0.00, g: "300,000", rk: 12, img: "นางสาวกาลดากร คามรัตนภูมิ.jpeg" },
+        { n: "นางพรรณิศา ปุณโณฑก", p: "หัวหน้าการเงิน 8", t: 200000, r: 0, pc: 0.00, g: "200,000", rk: 12, img: "นางพรรณิศา ปุณโณฑก.jpeg" },
+        { n: "นางสาวอาภาพร อาภัย", p: "พนักงานบริหารทั่วไป 7", t: 100000, r: 0, pc: 0.00, g: "100,000", rk: 12, img: "" },
+        { n: "นางสาวระพีพร แก้วดวงต๋า", p: "ผช.พนง.ธุรการ", t: 100000, r: 0, pc: 0.00, g: "100,000", rk: 12, img: "นางสาวระพีพร แก้วดวงต๋า.jpg" },
+        { n: "นายอนุศักดิ์ มีแก้วเจริญ", p: "ผช.พ.บริการยานพาหนะ", t: 100000, r: 0, pc: 0.00, g: "100,000", rk: 12, img: "นายอนุศักดิ์ มีแก้วเจริญ.jpg" }
+    ];
+
+    const picker = document.getElementById('staffPicker');
+    staffList.forEach((s, i) => {
+        let op = document.createElement('option');
+        op.value = i;
+        op.textContent = `${s.rk}. ${s.n}`;
+        picker.appendChild(op);
+    });
+
+    const ctx = document.getElementById('allStaffChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: staffList.map(s => s.n.replace("นางสาว", "นส.")),
+            datasets: [{
+                label: '% ผลงาน',
+                data: staffList.map(s => s.pc),
+                backgroundColor: staffList.map(s => s.pc >= 100 ? '#2d6a4f' : '#b7903c'),
+                borderRadius: 5
+            }]
+        },
+        options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    function updateProfile() {
+        const i = picker.value;
+        const box = document.getElementById('profileContainer');
+        if (i === "") { box.style.display = "none"; return; }
+        const d = staffList[i];
+        document.getElementById('pPhoto').src = d.img || 'logo ธ.ก.ส.jpg';
+        document.getElementById('pName').textContent = d.n;
+        document.getElementById('pPos').textContent = d.p;
+        document.getElementById('pPercent').textContent = d.pc + "%";
+        document.getElementById('pTarget').textContent = d.t.toLocaleString();
+        document.getElementById('pResult').textContent = d.r.toLocaleString();
+        document.getElementById('pGap').textContent = d.g;
+        box.style.display = "flex";
+    }
+</script>
+</body>
+</html>
